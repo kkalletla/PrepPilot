@@ -55,14 +55,18 @@ public class DsaService {
 
         Map<Long, ProblemProgress> byProblem = progressRepo.findByUserIdOrderByLastAttemptAtDesc(userId).stream()
                 .collect(Collectors.toMap(ProblemProgress::getProblemId, p -> p));
-        return list.stream().map(p -> ProblemSummary.of(p, byProblem.get(p.getId()))).toList();
+        boolean unlimited = gate.isUnlimited(userId);
+        return list.stream()
+                .map(p -> ProblemSummary.of(p, byProblem.get(p.getId()), gate.isTierLocked(unlimited, p.getDifficulty())))
+                .toList();
     }
 
     @Transactional(readOnly = true)
     public ProblemDetail getProblem(Long userId, Long problemId) {
         Problem p = problem(problemId);
         ProgressView pv = progressRepo.findByUserIdAndProblemId(userId, problemId).map(ProgressView::of).orElse(null);
-        return new ProblemDetail(p.getId(), p.getSlug(), p.getTitle(), p.getCategory(), p.getDifficulty(), p.getStatement(), pv);
+        boolean locked = gate.isTierLocked(gate.isUnlimited(userId), p.getDifficulty());
+        return new ProblemDetail(p.getId(), p.getSlug(), p.getTitle(), p.getCategory(), p.getDifficulty(), p.getStatement(), pv, locked);
     }
 
     // ------------------------------------------------------------ hint flow
@@ -70,7 +74,9 @@ public class DsaService {
     /** Step 1 of the hint flow: the user submits an attempt (code / notes). */
     @Transactional
     public ProgressView recordAttempt(Long userId, Long problemId) {
-        ProblemProgress pp = progressFor(userId, problem(problemId));
+        Problem p = problem(problemId);
+        gate.assertTierAccessible(userId, p.getDifficulty());
+        ProblemProgress pp = progressFor(userId, p);
         pp.recordAttempt();
         return ProgressView.of(progressRepo.save(pp));
     }
@@ -79,6 +85,7 @@ public class DsaService {
     @Transactional
     public HintView requestHint(Long userId, Long problemId, String attempt) {
         Problem p = problem(problemId);
+        gate.assertTierAccessible(userId, p.getDifficulty());
         ProblemProgress pp = progressFor(userId, p);
         if (pp.getStatus() == ProgressStatus.SOLVED) {
             throw new ApiException(org.springframework.http.HttpStatus.CONFLICT, "problem already solved");
@@ -108,8 +115,13 @@ public class DsaService {
         int solved = (int) all.stream().filter(p -> p.getStatus() == ProgressStatus.SOLVED).count();
         Map<ProblemCategory, DifficultyTier> tiers = new EnumMap<>(ProblemCategory.class);
         for (ProblemCategory c : ProblemCategory.values()) tiers.put(c, recommendedTier(userId, c));
-        return new DashboardView(streakDays(userId), solved, all.size() - solved, tiers,
-                all.stream().limit(10).map(ProgressView::of).toList());
+        boolean unlimited = gate.isUnlimited(userId);
+        java.time.Instant cutoff = gate.historyCutoff(unlimited);
+        List<ProgressView> recent = all.stream()
+                .filter(p -> cutoff == null || !p.getLastAttemptAt().isBefore(cutoff))
+                .limit(10).map(ProgressView::of).toList();
+        return new DashboardView(streakDays(userId), solved, all.size() - solved, tiers, recent,
+                unlimited ? null : gate.limits().freeHistoryDays());
     }
 
     /**

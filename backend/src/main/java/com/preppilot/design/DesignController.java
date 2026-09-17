@@ -19,8 +19,9 @@ public class DesignController {
     }
 
     @GetMapping("/questions")
-    public List<QuestionSummary> questions(@RequestParam(required = false) SeniorityLevel seniority) {
-        return design.listQuestions(seniority);
+    public List<QuestionSummary> questions(@AuthenticationPrincipal AuthenticatedUser user,
+                                           @RequestParam(required = false) SeniorityLevel seniority) {
+        return design.listQuestions(user.id(), seniority);
     }
 
     @PostMapping("/sessions")

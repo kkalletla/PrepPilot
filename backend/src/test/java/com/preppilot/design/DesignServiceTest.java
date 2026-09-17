@@ -46,7 +46,7 @@ class DesignServiceTest {
         assertThat(all).hasSize(4);
         assertThat(all).extracting(DesignQuestion::getSlug).allMatch(templates.questionSlugs()::contains);
         assertThat(all).extracting(DesignQuestion::getSeniority).contains(SeniorityLevel.MID, SeniorityLevel.SENIOR, SeniorityLevel.STAFF);
-        assertThat(design.listQuestions(SeniorityLevel.STAFF)).extracting(q -> q.slug()).containsExactly("news-feed");
+        assertThat(design.listQuestions(userId, SeniorityLevel.STAFF)).extracting(q -> q.slug()).containsExactly("news-feed");
     }
 
     @Test
@@ -122,7 +122,7 @@ class DesignServiceTest {
     @Test
     void sessionsAreScopedToTheirOwner() {
         Long other = users.save(new User("other@test.dev", "hash")).getId();
-        SessionView s = design.startSession(userId, id("news-feed"));
+        SessionView s = design.startSession(userId, id("chat-application"));
         assertThatThrownBy(() -> design.getSession(other, s.id())).isInstanceOf(ApiException.class);
         assertThat(design.listSessions(userId)).hasSize(1);
         assertThat(design.listSessions(other)).isEmpty();

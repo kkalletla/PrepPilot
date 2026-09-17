@@ -52,17 +52,19 @@ public class DesignService {
     }
 
     @Transactional(readOnly = true)
-    public List<QuestionSummary> listQuestions(SeniorityLevel seniority) {
+    public List<QuestionSummary> listQuestions(Long userId, SeniorityLevel seniority) {
         List<DesignQuestion> list = seniority == null
                 ? questions.findAllByOrderBySeniorityAscIdAsc()
                 : questions.findBySeniorityOrderByIdAsc(seniority);
-        return list.stream().map(QuestionSummary::of).toList();
+        boolean unlimited = gate.isUnlimited(userId);
+        return list.stream().map(q -> QuestionSummary.of(q, gate.isSeniorityLocked(unlimited, q.getSeniority()))).toList();
     }
 
     /** Flow step 1: the intro prompt sets the problem. */
     @Transactional
     public SessionView startSession(Long userId, Long questionId) {
         DesignQuestion q = questions.findById(questionId).orElseThrow(() -> ApiException.notFound("design question"));
+        gate.assertSeniorityAccessible(userId, q.getSeniority());
         gate.assertCanStartDesign(userId);
         DesignSession s = new DesignSession(userId, q.getId());
         List<TranscriptTurn> turns = new ArrayList<>();
@@ -111,9 +113,12 @@ public class DesignService {
         return view(s, questions.findById(s.getQuestionId()).orElseThrow());
     }
 
+    /** Free users see only the recent history window; paid users see everything. */
     @Transactional(readOnly = true)
     public List<SessionView> listSessions(Long userId) {
+        java.time.Instant cutoff = gate.historyCutoff(gate.isUnlimited(userId));
         return sessions.findByUserIdOrderByStartedAtDesc(userId).stream()
+                .filter(s -> cutoff == null || !s.getStartedAt().isBefore(cutoff))
                 .map(s -> view(s, questions.findById(s.getQuestionId()).orElseThrow()))
                 .toList();
     }

@@ -18,6 +18,9 @@ preppilot:
   limits:
     free-dsa-per-day: 3
     free-design-per-week: 1
+    free-max-tier: MEDIUM
+    free-max-seniority: SENIOR
+    free-history-days: 7
 
 coaching:
   engine: template

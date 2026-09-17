@@ -58,6 +58,9 @@ public class DesignSession {
     public void setStage(DesignStage stage) { this.stage = stage; }
     public void setTranscript(String transcript) { this.transcript = transcript; }
 
+    /** Test/seed helper. */
+    public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
+
     /** Per-stage feedback accumulated while the session is still in progress. */
     public void setRubricBreakdownDraft(String rubricBreakdown) { this.rubricBreakdown = rubricBreakdown; }
 

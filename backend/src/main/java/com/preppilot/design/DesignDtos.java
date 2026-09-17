@@ -13,9 +13,10 @@ import java.util.Map;
 public final class DesignDtos {
     private DesignDtos() {}
 
-    public record QuestionSummary(Long id, String slug, String title, String category, SeniorityLevel seniority) {
-        static QuestionSummary of(DesignQuestion q) {
-            return new QuestionSummary(q.getId(), q.getSlug(), q.getTitle(), q.getCategory(), q.getSeniority());
+    /** {@code locked} = paid-only seniority level for this user; starting a session answers 402. */
+    public record QuestionSummary(Long id, String slug, String title, String category, SeniorityLevel seniority, boolean locked) {
+        static QuestionSummary of(DesignQuestion q, boolean locked) {
+            return new QuestionSummary(q.getId(), q.getSlug(), q.getTitle(), q.getCategory(), q.getSeniority(), locked);
         }
     }
 

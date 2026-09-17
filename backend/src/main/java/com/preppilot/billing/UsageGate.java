@@ -1,9 +1,13 @@
 package com.preppilot.billing;
 
 import com.preppilot.common.ApiException;
+import com.preppilot.design.SeniorityLevel;
+import com.preppilot.dsa.DifficultyTier;
 import com.preppilot.subscription.*;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +55,38 @@ public class UsageGate {
             throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
                     "Free tier allows " + limits.freeDesignPerWeek() + " system design session per week. Upgrade for unlimited sessions.");
         }
+    }
+
+    // ---------------------------------------------------------------- paid-only content
+
+    /** True when this tier is above what the free plan includes. */
+    public boolean isTierLocked(boolean unlimited, DifficultyTier tier) {
+        return !unlimited && tier.ordinal() > limits.freeMaxTier().ordinal();
+    }
+
+    public boolean isSeniorityLocked(boolean unlimited, SeniorityLevel seniority) {
+        return !unlimited && seniority.ordinal() > limits.freeMaxSeniority().ordinal();
+    }
+
+    @Transactional(readOnly = true)
+    public void assertTierAccessible(Long userId, DifficultyTier tier) {
+        if (isTierLocked(isUnlimited(userId), tier)) {
+            throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
+                    tier.name().replace('_', ' ') + " problems are part of Pro. Upgrade to unlock every tier.");
+        }
+    }
+
+    @Transactional(readOnly = true)
+    public void assertSeniorityAccessible(Long userId, SeniorityLevel seniority) {
+        if (isSeniorityLocked(isUnlimited(userId), seniority)) {
+            throw new ApiException(HttpStatus.PAYMENT_REQUIRED,
+                    seniority.name() + "-level questions are part of Pro. Upgrade to unlock the full question bank.");
+        }
+    }
+
+    /** Oldest instant a free user's history goes back to; null (no cutoff) for paid users. */
+    public Instant historyCutoff(boolean unlimited) {
+        return unlimited ? null : Instant.now(clock).minus(limits.freeHistoryDays(), ChronoUnit.DAYS);
     }
 
     @Transactional(readOnly = true)

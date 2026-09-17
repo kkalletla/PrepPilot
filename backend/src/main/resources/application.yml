@@ -23,6 +23,9 @@ preppilot:
   limits:
     free-dsa-per-day: ${FREE_DSA_PER_DAY:3}
     free-design-per-week: ${FREE_DESIGN_PER_WEEK:1}
+    free-max-tier: ${FREE_MAX_TIER:MEDIUM}            # HARD and FAANG_BAR are paid-only
+    free-max-seniority: ${FREE_MAX_SENIORITY:SENIOR}  # STAFF questions are paid-only
+    free-history-days: ${FREE_HISTORY_DAYS:7}
 
 coaching:
   # Selects the CoachingEngine bean: template | claude | openai
