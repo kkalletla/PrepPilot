@@ -5,6 +5,7 @@ import com.preppilot.coaching.HintRequest;
 import com.preppilot.coaching.HintResponse;
 import com.preppilot.common.ApiException;
 import com.preppilot.dsa.DsaDtos.*;
+import com.preppilot.billing.UsageGate;
 import com.preppilot.subscription.UsageService;
 import java.time.Clock;
 import java.time.LocalDate;
@@ -29,14 +30,16 @@ public class DsaService {
     private final ProblemProgressRepository progressRepo;
     private final CoachingEngine coach;
     private final UsageService usage;
+    private final UsageGate gate;
     private final Clock clock;
 
     public DsaService(ProblemRepository problems, ProblemProgressRepository progressRepo, CoachingEngine coach,
-                      UsageService usage, Clock clock) {
+                      UsageService usage, UsageGate gate, Clock clock) {
         this.problems = problems;
         this.progressRepo = progressRepo;
         this.coach = coach;
         this.usage = usage;
+        this.gate = gate;
         this.clock = clock;
     }
 
@@ -152,9 +155,10 @@ public class DsaService {
         return problems.findById(id).orElseThrow(() -> ApiException.notFound("problem"));
     }
 
-    /** Returns existing progress, or starts a new one (counting a DSA session toward today's usage). */
+    /** Returns existing progress, or starts a new one: gated by tier/limits and counted toward today's usage. */
     private ProblemProgress progressFor(Long userId, Problem p) {
         return progressRepo.findByUserIdAndProblemId(userId, p.getId()).orElseGet(() -> {
+            gate.assertCanStartDsa(userId);
             usage.recordDsaSession(userId);
             return progressRepo.save(new ProblemProgress(userId, p.getId(), p.getDifficulty()));
         });

@@ -15,6 +15,18 @@ preppilot:
   jwt:
     secret: test-secret-test-secret-test-secret-test-secret
     expiry-minutes: 60
+  limits:
+    free-dsa-per-day: 3
+    free-design-per-week: 1
 
 coaching:
   engine: template
+
+stripe:
+  secret-key: ""
+  webhook-secret: whsec_test_secret_for_unit_tests
+  price-id: price_test
+  success-url: http://localhost/ok
+  cancel-url: http://localhost/cancel
+  portal-return-url: http://localhost/billing
+  allow-live: false

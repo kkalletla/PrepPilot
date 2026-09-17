@@ -7,6 +7,7 @@ import com.preppilot.coaching.TemplateCoachingEngine;
 import com.preppilot.common.ApiException;
 import com.preppilot.dsa.DsaDtos.HintView;
 import com.preppilot.dsa.DsaDtos.SolveResult;
+import com.preppilot.billing.UsageGate;
 import com.preppilot.subscription.UsageService;
 import com.preppilot.user.User;
 import com.preppilot.user.UserRepository;
@@ -29,6 +30,7 @@ class DsaServiceTest {
     @Autowired ProblemProgressRepository progressRepo;
     @Autowired UserRepository users;
     @Autowired UsageService usage;
+    @Autowired UsageGate gate;
     @Autowired TemplateCoachingEngine templates;
     @Autowired DsaService dsa;
 
@@ -124,7 +126,7 @@ class DsaServiceTest {
     @Test
     void streakCountsConsecutiveDaysEndingTodayOrYesterday() {
         Clock fixed = Clock.fixed(Instant.parse("2026-09-17T15:00:00Z"), ZoneOffset.UTC);
-        DsaService svc = new DsaService(problems, progressRepo, templates, usage, fixed);
+        DsaService svc = new DsaService(problems, progressRepo, templates, usage, gate, fixed);
         assertThat(svc.streakDays(userId)).isZero();
 
         solvedOn("two-sum", LocalDate.of(2026, 9, 17));
@@ -134,10 +136,10 @@ class DsaServiceTest {
         assertThat(svc.streakDays(userId)).isEqualTo(3);
 
         // Streak survives if the last solve was yesterday, breaks if it was two days ago.
-        DsaService tomorrow = new DsaService(problems, progressRepo, templates, usage,
+        DsaService tomorrow = new DsaService(problems, progressRepo, templates, usage, gate,
                 Clock.fixed(Instant.parse("2026-09-18T09:00:00Z"), ZoneOffset.UTC));
         assertThat(tomorrow.streakDays(userId)).isEqualTo(3);
-        DsaService dayAfter = new DsaService(problems, progressRepo, templates, usage,
+        DsaService dayAfter = new DsaService(problems, progressRepo, templates, usage, gate,
                 Clock.fixed(Instant.parse("2026-09-19T09:00:00Z"), ZoneOffset.UTC));
         assertThat(dayAfter.streakDays(userId)).isZero();
     }

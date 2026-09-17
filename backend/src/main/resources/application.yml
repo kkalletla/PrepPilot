@@ -20,7 +20,20 @@ preppilot:
     # Must be at least 32 bytes. Override via JWT_SECRET in every real environment.
     secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-32b}
     expiry-minutes: ${JWT_EXPIRY_MINUTES:1440}
+  limits:
+    free-dsa-per-day: ${FREE_DSA_PER_DAY:3}
+    free-design-per-week: ${FREE_DESIGN_PER_WEEK:1}
 
 coaching:
   # Selects the CoachingEngine bean: template | claude | openai
   engine: ${COACHING_ENGINE:template}
+
+stripe:
+  # Test-mode keys only. Boot refuses a live key unless stripe.allow-live=true (Acceptance Criteria gate).
+  secret-key: ${STRIPE_SECRET_KEY:}
+  webhook-secret: ${STRIPE_WEBHOOK_SECRET:}
+  price-id: ${STRIPE_PRICE_ID:}
+  success-url: ${STRIPE_SUCCESS_URL:http://localhost:4200/billing?checkout=success}
+  cancel-url: ${STRIPE_CANCEL_URL:http://localhost:4200/billing?checkout=cancel}
+  portal-return-url: ${STRIPE_PORTAL_RETURN_URL:http://localhost:4200/billing}
+  allow-live: false

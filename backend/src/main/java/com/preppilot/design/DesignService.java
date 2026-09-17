@@ -11,6 +11,7 @@ import com.preppilot.coaching.TranscriptTurn;
 import com.preppilot.coaching.TranscriptTurn.Role;
 import com.preppilot.common.ApiException;
 import com.preppilot.design.DesignDtos.*;
+import com.preppilot.billing.UsageGate;
 import com.preppilot.subscription.UsageService;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
@@ -37,14 +38,16 @@ public class DesignService {
     private final DesignSessionRepository sessions;
     private final CoachingEngine coach;
     private final UsageService usage;
+    private final UsageGate gate;
     private final ObjectMapper json;
 
     public DesignService(DesignQuestionRepository questions, DesignSessionRepository sessions, CoachingEngine coach,
-                         UsageService usage, ObjectMapper json) {
+                         UsageService usage, UsageGate gate, ObjectMapper json) {
         this.questions = questions;
         this.sessions = sessions;
         this.coach = coach;
         this.usage = usage;
+        this.gate = gate;
         this.json = json;
     }
 
@@ -60,6 +63,7 @@ public class DesignService {
     @Transactional
     public SessionView startSession(Long userId, Long questionId) {
         DesignQuestion q = questions.findById(questionId).orElseThrow(() -> ApiException.notFound("design question"));
+        gate.assertCanStartDesign(userId);
         DesignSession s = new DesignSession(userId, q.getId());
         List<TranscriptTurn> turns = new ArrayList<>();
         turns.add(new TranscriptTurn(Role.COACH, DesignStage.REQUIREMENTS, q.getPrompt()));

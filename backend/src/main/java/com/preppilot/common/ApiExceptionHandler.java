@@ -15,6 +15,11 @@ public class ApiExceptionHandler {
         return ResponseEntity.status(e.getStatus()).body(Map.of("error", e.getMessage()));
     }
 
+    @ExceptionHandler(com.preppilot.billing.BillingException.class)
+    public ResponseEntity<Map<String, String>> handleBilling(com.preppilot.billing.BillingException e) {
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("error", e.getMessage()));
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidation(MethodArgumentNotValidException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
