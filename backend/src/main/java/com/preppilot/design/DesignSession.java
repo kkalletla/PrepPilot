@@ -58,6 +58,9 @@ public class DesignSession {
     public void setStage(DesignStage stage) { this.stage = stage; }
     public void setTranscript(String transcript) { this.transcript = transcript; }
 
+    /** Per-stage feedback accumulated while the session is still in progress. */
+    public void setRubricBreakdownDraft(String rubricBreakdown) { this.rubricBreakdown = rubricBreakdown; }
+
     public void complete(String rubricBreakdown, int overallScore) {
         this.stage = DesignStage.COMPLETE;
         this.rubricBreakdown = rubricBreakdown;
