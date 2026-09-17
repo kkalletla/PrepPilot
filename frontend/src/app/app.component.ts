@@ -13,6 +13,7 @@ import { AuthService } from './core/auth.service';
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
           <a routerLink="/dsa" routerLinkActive="active">DSA Coach</a>
           <a routerLink="/design" routerLinkActive="active">System Design</a>
+          <a routerLink="/billing" routerLinkActive="active">Account</a>
         </nav>
         <span class="spacer"></span>
         <span class="muted">{{ auth.email() }}</span>

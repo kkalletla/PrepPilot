@@ -3,15 +3,17 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { HintResponse, ProblemDetail, SolveResult } from '../../models';
+import { UpgradePromptComponent } from '../../shared/upgrade-prompt.component';
 
 @Component({
   selector: 'app-dsa-problem',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule, RouterLink, UpgradePromptComponent],
   template: `
     @if (problem(); as p) {
       <p><a routerLink="/dsa">← All problems</a></p>
       <h1>{{ p.title }} <span class="pill">{{ p.difficulty }}</span></h1>
       <p class="muted">{{ p.category }}</p>
+      @if (limit(); as msg) { <app-upgrade-prompt [message]="msg" /> }
 
       <div class="two-col">
         <section class="card">
@@ -65,6 +67,7 @@ export class DsaProblemComponent implements OnInit {
   hints = signal<HintResponse[]>([]);
   result = signal<SolveResult | null>(null);
   error = signal<string | null>(null);
+  limit = signal<string | null>(null);
   attempt = '';
 
   constructor(private api: ApiService, private route: ActivatedRoute) {}
@@ -79,7 +82,10 @@ export class DsaProblemComponent implements OnInit {
 
   saveAttempt(): void {
     const p = this.problem()!;
-    this.api.attempt(p.id, this.attempt).subscribe(progress => this.problem.set({ ...p, progress }));
+    this.api.attempt(p.id, this.attempt).subscribe({
+      next: progress => this.problem.set({ ...p, progress }),
+      error: err => this.handle(err),
+    });
   }
 
   askHint(): void {
@@ -90,8 +96,13 @@ export class DsaProblemComponent implements OnInit {
         this.hints.update(list => [...list, hv.hint]);
         this.problem.set({ ...p, progress: hv.progress });
       },
-      error: err => this.error.set(err?.error?.error ?? 'Could not fetch a hint'),
+      error: err => this.handle(err, 'Could not fetch a hint'),
     });
+  }
+
+  private handle(err: any, fallback = 'Request failed'): void {
+    if (err?.status === 402) this.limit.set(err.error?.error ?? 'Free-tier limit reached');
+    else this.error.set(err?.error?.error ?? fallback);
   }
 
   markSolved(): void {

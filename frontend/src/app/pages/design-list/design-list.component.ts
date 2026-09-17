@@ -2,12 +2,15 @@ import { Component, OnInit, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { ApiService } from '../../core/api.service';
 import { QuestionSummary, SessionView, STAGE_LABELS } from '../../models';
+import { UpgradePromptComponent } from '../../shared/upgrade-prompt.component';
 
 @Component({
   selector: 'app-design-list',
-  imports: [RouterLink],
+  imports: [RouterLink, UpgradePromptComponent],
   template: `
     <h1>System Design Mock Interview</h1>
+    @if (limit(); as msg) { <app-upgrade-prompt [message]="msg" /> }
+    @if (error()) { <p class="error">{{ error() }}</p> }
     <section class="card">
       <h2>Question bank</h2>
       <table>
@@ -44,6 +47,8 @@ export class DesignListComponent implements OnInit {
   questions = signal<QuestionSummary[]>([]);
   sessions = signal<SessionView[]>([]);
   labels = STAGE_LABELS;
+  limit = signal<string | null>(null);
+  error = signal<string | null>(null);
 
   constructor(private api: ApiService, private router: Router) {}
 
@@ -53,6 +58,14 @@ export class DesignListComponent implements OnInit {
   }
 
   start(q: QuestionSummary): void {
-    this.api.startSession(q.id).subscribe(s => this.router.navigate(['/design/sessions', s.id]));
+    this.limit.set(null);
+    this.error.set(null);
+    this.api.startSession(q.id).subscribe({
+      next: s => this.router.navigate(['/design/sessions', s.id]),
+      error: err => {
+        if (err?.status === 402) this.limit.set(err.error?.error ?? 'Free-tier limit reached');
+        else this.error.set(err?.error?.error ?? 'Could not start session');
+      },
+    });
   }
 }

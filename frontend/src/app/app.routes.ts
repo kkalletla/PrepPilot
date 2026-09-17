@@ -6,6 +6,7 @@ import { DsaListComponent } from './pages/dsa-list/dsa-list.component';
 import { DsaProblemComponent } from './pages/dsa-problem/dsa-problem.component';
 import { DesignListComponent } from './pages/design-list/design-list.component';
 import { DesignSessionComponent } from './pages/design-session/design-session.component';
+import { BillingComponent } from './pages/billing/billing.component';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -14,5 +15,6 @@ export const routes: Routes = [
   { path: 'dsa/:id', component: DsaProblemComponent, canActivate: [authGuard] },
   { path: 'design', component: DesignListComponent, canActivate: [authGuard] },
   { path: 'design/sessions/:id', component: DesignSessionComponent, canActivate: [authGuard] },
+  { path: 'billing', component: BillingComponent, canActivate: [authGuard] },
   { path: '**', redirectTo: '' },
 ];

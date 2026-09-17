@@ -2,8 +2,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
-  AnswerResult, DashboardView, DifficultyTier, HintView, ProblemCategory, ProblemDetail, ProblemSummary,
-  ProgressView, QuestionSummary, SeniorityLevel, SessionView, SolveResult,
+  AnswerResult, BillingStatus, DashboardView, DifficultyTier, HintView, ProblemCategory, ProblemDetail, ProblemSummary,
+  ProgressView, QuestionSummary, RedirectResponse, SeniorityLevel, SessionView, SolveResult,
 } from '../models';
 
 @Injectable({ providedIn: 'root' })
@@ -32,4 +32,9 @@ export class ApiService {
   session(id: number): Observable<SessionView> { return this.http.get<SessionView>(`/api/design/sessions/${id}`); }
   startSession(questionId: number): Observable<SessionView> { return this.http.post<SessionView>('/api/design/sessions', { questionId }); }
   answer(id: number, answer: string): Observable<AnswerResult> { return this.http.post<AnswerResult>(`/api/design/sessions/${id}/answers`, { answer }); }
+
+  // Billing
+  billingStatus(): Observable<BillingStatus> { return this.http.get<BillingStatus>('/api/billing/status'); }
+  checkout(): Observable<RedirectResponse> { return this.http.post<RedirectResponse>('/api/billing/checkout', {}); }
+  portal(): Observable<RedirectResponse> { return this.http.post<RedirectResponse>('/api/billing/portal', {}); }
 }

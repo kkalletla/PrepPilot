@@ -48,3 +48,13 @@ export const STAGE_LABELS: Record<DesignStage, string> = {
 };
 export const TIERS: DifficultyTier[] = ['EASY', 'MEDIUM', 'HARD', 'FAANG_BAR'];
 export const CATEGORIES: ProblemCategory[] = ['ARRAYS', 'LINKED_LISTS', 'STACKS_QUEUES', 'TREES', 'GRAPHS', 'DP'];
+
+export type SubscriptionTier = 'FREE' | 'PAID';
+export type SubscriptionStatus = 'NONE' | 'ACTIVE' | 'PAST_DUE' | 'CANCELED';
+export interface BillingStatus {
+  tier: SubscriptionTier; status: SubscriptionStatus; unlimited: boolean;
+  dsaUsedToday: number; dsaDailyLimit: number | null;
+  designUsedThisWeek: number; designWeeklyLimit: number | null;
+  hasStripeCustomer: boolean; billingConfigured: boolean;
+}
+export interface RedirectResponse { url: string; }
