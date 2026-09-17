@@ -1,0 +1,187 @@
+{
+  "url-shortener": {
+    "intro": "Design a URL shortening service like bit.ly. Users submit a long URL and receive a short link that redirects to it. Start by clarifying the requirements: what must it do, and roughly how much traffic should it handle?",
+    "stages": {
+      "REQUIREMENTS": {
+        "concepts": [
+          {"label": "read/write ratio", "aliases": ["read", "redirect", "ratio"], "dimension": "SCALABILITY"},
+          {"label": "traffic estimate", "aliases": ["per second", "qps", "rps", "million", "billion", "per day"], "dimension": "SCALABILITY"},
+          {"label": "short-link length / uniqueness", "aliases": ["unique", "length", "characters", "collision"], "dimension": "DATA_MODELING"},
+          {"label": "expiry / custom aliases", "aliases": ["expir", "ttl", "custom", "alias"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "Good. Redirects will dominate writes by orders of magnitude — what latency target would you commit to for a redirect, and why?",
+        "challenge": "You haven't addressed {gap}. How does it shape the design before you draw any boxes?"
+      },
+      "COMPONENTS": {
+        "concepts": [
+          {"label": "API / load balancer layer", "aliases": ["api", "load balancer", "gateway", "service"], "dimension": "SCALABILITY"},
+          {"label": "key generation strategy", "aliases": ["base62", "hash", "counter", "key generation", "kgs", "random"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "cache for hot redirects", "aliases": ["cache", "redis", "memcache"], "dimension": "SCALABILITY"},
+          {"label": "persistent store", "aliases": ["database", "db", "store", "storage"], "dimension": "DATA_MODELING"}
+        ],
+        "followUp": "Hashing the long URL versus handing out counter-based keys — which did you pick, and what does the other one buy you?",
+        "challenge": "There is no {gap} in your design yet. What fails without it at the traffic you estimated?"
+      },
+      "DATA_MODEL": {
+        "concepts": [
+          {"label": "mapping schema (short -> long)", "aliases": ["short", "long url", "mapping", "table", "row"], "dimension": "DATA_MODELING"},
+          {"label": "primary key choice", "aliases": ["primary key", "key", "index"], "dimension": "DATA_MODELING"},
+          {"label": "SQL vs NoSQL justification", "aliases": ["sql", "nosql", "key-value", "dynamo", "cassandra", "postgres", "relational"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "metadata (owner, created, expiry)", "aliases": ["created", "owner", "user id", "expir", "metadata", "timestamp"], "dimension": "DATA_MODELING"}
+        ],
+        "followUp": "The access pattern is essentially a point lookup by key. Does that change your storage choice? What would a relational store give you that you'd be giving up?",
+        "challenge": "You skipped {gap}. Sketch it — what columns or fields, and which one do lookups hit?"
+      },
+      "SCALING": {
+        "concepts": [
+          {"label": "sharding / partitioning", "aliases": ["shard", "partition", "consistent hashing"], "dimension": "SCALABILITY"},
+          {"label": "replication & availability", "aliases": ["replica", "replication", "availability", "failover"], "dimension": "SCALABILITY"},
+          {"label": "caching strategy & eviction", "aliases": ["cache", "lru", "evict", "cdn"], "dimension": "SCALABILITY"},
+          {"label": "key-space exhaustion / collisions", "aliases": ["collision", "exhaust", "run out", "key space", "keyspace"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "analytics / click tracking", "aliases": ["analytics", "click", "metrics", "async", "queue", "kafka"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "Suppose a single short link goes viral and receives 30% of all traffic. Which component saturates first, and what's your mitigation?",
+        "challenge": "Push further on {gap} — at 10x the traffic you estimated, what breaks and how would you address it?"
+      }
+    }
+  },
+  "rate-limiter": {
+    "intro": "Design a distributed rate limiter that protects an API from clients exceeding their allowed request rate. Start with requirements: what are we limiting, at what granularity, and how strict must enforcement be?",
+    "stages": {
+      "REQUIREMENTS": {
+        "concepts": [
+          {"label": "limit granularity (per user / IP / API key)", "aliases": ["per user", "per ip", "api key", "client", "tenant", "granularity"], "dimension": "DATA_MODELING"},
+          {"label": "strictness / accuracy tolerance", "aliases": ["strict", "accura", "approximate", "tolerate", "soft", "hard limit"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "traffic scale", "aliases": ["per second", "qps", "rps", "million", "throughput"], "dimension": "SCALABILITY"},
+          {"label": "response to limited requests (429)", "aliases": ["429", "reject", "throttle", "retry-after", "drop", "queue"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "If the limiter itself becomes unavailable, should requests fail open or fail closed? Defend it.",
+        "challenge": "You haven't pinned down {gap}. Without it, how would you know whether a burst is acceptable?"
+      },
+      "COMPONENTS": {
+        "concepts": [
+          {"label": "algorithm choice (token bucket / sliding window / leaky bucket)", "aliases": ["token bucket", "sliding window", "leaky bucket", "fixed window", "sliding log"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "placement (gateway / middleware / sidecar)", "aliases": ["gateway", "middleware", "sidecar", "proxy", "edge"], "dimension": "SCALABILITY"},
+          {"label": "shared counter store", "aliases": ["redis", "memcache", "store", "counter", "shared state"], "dimension": "SCALABILITY"},
+          {"label": "rule configuration", "aliases": ["rule", "config", "policy", "limit per"], "dimension": "DATA_MODELING"}
+        ],
+        "followUp": "Fixed windows allow 2x bursts at the boundary. Does your algorithm have that problem? What does fixing it cost in memory?",
+        "challenge": "Your design has no clear {gap}. Where does it live and what does the request path look like?"
+      },
+      "DATA_MODEL": {
+        "concepts": [
+          {"label": "counter key design", "aliases": ["key", "client id", "bucket", "namespace"], "dimension": "DATA_MODELING"},
+          {"label": "state per client (tokens/timestamps)", "aliases": ["token", "timestamp", "count", "last refill", "window start"], "dimension": "DATA_MODELING"},
+          {"label": "TTL / expiry of state", "aliases": ["ttl", "expir", "evict"], "dimension": "SCALABILITY"},
+          {"label": "atomic update", "aliases": ["atomic", "lua", "incr", "cas", "compare-and-swap", "transaction"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "Two limiter instances read the counter at the same instant, both see 99 of 100, and both allow. How do you prevent that — and is preventing it worth the latency?",
+        "challenge": "Address {gap}. How much memory per client does your state take at the scale you estimated?"
+      },
+      "SCALING": {
+        "concepts": [
+          {"label": "sharding counters by client", "aliases": ["shard", "partition", "consistent hashing"], "dimension": "SCALABILITY"},
+          {"label": "local vs global enforcement", "aliases": ["local", "global", "sync", "eventually", "approximate", "gossip"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "hot keys", "aliases": ["hot key", "hot client", "skew", "hotspot"], "dimension": "SCALABILITY"},
+          {"label": "monitoring & tuning", "aliases": ["monitor", "metric", "alert", "tune", "observab"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "A single abusive client sends 1M requests/second. Does the limiter itself survive, or does it become the bottleneck?",
+        "challenge": "Dig into {gap}. What's the concrete failure mode at 10x scale and your mitigation?"
+      }
+    }
+  },
+  "chat-application": {
+    "intro": "Design a real-time chat application like WhatsApp or Slack supporting one-to-one and group messaging. Start with requirements: message delivery guarantees, online presence, and expected scale.",
+    "stages": {
+      "REQUIREMENTS": {
+        "concepts": [
+          {"label": "one-to-one vs group messaging", "aliases": ["group", "one-to-one", "1:1", "direct message", "channel"], "dimension": "DATA_MODELING"},
+          {"label": "delivery guarantees / ordering", "aliases": ["deliver", "ordering", "order", "at least once", "exactly once", "ack"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "presence / online status", "aliases": ["presence", "online", "last seen", "typing"], "dimension": "SCALABILITY"},
+          {"label": "scale (DAU, messages/day)", "aliases": ["dau", "users", "million", "billion", "messages per", "per second"], "dimension": "SCALABILITY"}
+        ],
+        "followUp": "Is it acceptable for two members of a group to see messages in different orders? What does strict ordering cost?",
+        "challenge": "You haven't covered {gap}. How does it change what 'correct' means for this system?"
+      },
+      "COMPONENTS": {
+        "concepts": [
+          {"label": "persistent connection (WebSocket)", "aliases": ["websocket", "long polling", "persistent connection", "sse", "socket"], "dimension": "SCALABILITY"},
+          {"label": "chat / message service", "aliases": ["chat service", "message service", "messaging service", "chat server"], "dimension": "SCALABILITY"},
+          {"label": "message queue / fan-out", "aliases": ["queue", "kafka", "pub/sub", "pubsub", "fan-out", "fanout", "broker"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "push notification for offline users", "aliases": ["push notification", "apns", "fcm", "offline"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "presence service", "aliases": ["presence", "heartbeat"], "dimension": "SCALABILITY"}
+        ],
+        "followUp": "Users A and B are connected to different chat servers. Walk the message from A's socket to B's socket — every hop.",
+        "challenge": "There's no {gap} yet. What breaks for a user whose phone is asleep?"
+      },
+      "DATA_MODEL": {
+        "concepts": [
+          {"label": "message schema (id, sender, conversation, ts)", "aliases": ["message id", "sender", "conversation", "timestamp", "schema", "columns"], "dimension": "DATA_MODELING"},
+          {"label": "conversation / group membership", "aliases": ["membership", "member", "participant", "conversation id", "group id"], "dimension": "DATA_MODELING"},
+          {"label": "store choice for write-heavy append", "aliases": ["cassandra", "hbase", "nosql", "wide column", "key-value", "append"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "message id generation / ordering", "aliases": ["snowflake", "sequence", "monotonic", "id generation", "sortable"], "dimension": "DATA_MODELING"}
+        ],
+        "followUp": "How do you page through message history efficiently, and what's your partition key so a hot group doesn't hit one node?",
+        "challenge": "You didn't address {gap}. How will a client fetch the last 50 messages of a conversation?"
+      },
+      "SCALING": {
+        "concepts": [
+          {"label": "connection servers scaling / discovery", "aliases": ["connection", "service discovery", "zookeeper", "sticky", "user-to-server", "routing"], "dimension": "SCALABILITY"},
+          {"label": "large group fan-out", "aliases": ["fan-out", "fanout", "large group", "broadcast"], "dimension": "SCALABILITY"},
+          {"label": "message storage partitioning", "aliases": ["partition", "shard"], "dimension": "SCALABILITY"},
+          {"label": "end-to-end encryption / trade-offs", "aliases": ["encrypt", "e2e", "end-to-end"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "multi-region / latency", "aliases": ["region", "geo", "latency", "edge"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "A 100k-member group sends one message. What is the write amplification, and where would you cut it?",
+        "challenge": "Go deeper on {gap}. What's the failure at 10x scale and how do you contain it?"
+      }
+    }
+  },
+  "news-feed": {
+    "intro": "Design a social news feed like Facebook's or Twitter's home timeline. Users follow others and see a ranked, near-real-time feed of their posts. Begin with requirements and scale assumptions.",
+    "stages": {
+      "REQUIREMENTS": {
+        "concepts": [
+          {"label": "feed freshness / latency", "aliases": ["fresh", "latency", "real-time", "near real", "seconds"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "ranking vs chronological", "aliases": ["rank", "chronolog", "relevance", "ml"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "scale (DAU, posts/day, follow graph)", "aliases": ["dau", "million", "billion", "per second", "follow"], "dimension": "SCALABILITY"},
+          {"label": "read vs write ratio", "aliases": ["read-heavy", "read heavy", "ratio", "reads"], "dimension": "SCALABILITY"}
+        ],
+        "followUp": "Is a feed that is 30 seconds stale acceptable? What product features become impossible if you answer yes?",
+        "challenge": "You haven't discussed {gap}. It determines whether you precompute feeds or build them on read — settle it first."
+      },
+      "COMPONENTS": {
+        "concepts": [
+          {"label": "post service / write path", "aliases": ["post service", "write path", "publish", "create post"], "dimension": "SCALABILITY"},
+          {"label": "fan-out on write vs fan-out on read", "aliases": ["fan-out on write", "fanout on write", "fan-out on read", "fanout on read", "push model", "pull model", "hybrid"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "feed cache / precomputed timelines", "aliases": ["feed cache", "timeline cache", "redis", "precompute"], "dimension": "SCALABILITY"},
+          {"label": "ranking service", "aliases": ["ranking service", "ranker", "scoring"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "social graph service", "aliases": ["graph", "followers", "following service"], "dimension": "DATA_MODELING"}
+        ],
+        "followUp": "A celebrity with 50M followers posts. Under pure fan-out on write, what happens, and what's your hybrid?",
+        "challenge": "You have no explicit {gap}. Without it, where does a new post go the instant it's published?"
+      },
+      "DATA_MODEL": {
+        "concepts": [
+          {"label": "post schema", "aliases": ["post id", "author", "content", "created", "schema"], "dimension": "DATA_MODELING"},
+          {"label": "follow graph storage", "aliases": ["follow table", "edge", "adjacency", "graph db", "follower list"], "dimension": "DATA_MODELING"},
+          {"label": "feed entry / timeline structure", "aliases": ["feed entry", "timeline", "sorted set", "list of post ids", "post ids"], "dimension": "DATA_MODELING"},
+          {"label": "media storage separation", "aliases": ["blob", "s3", "object storage", "cdn", "media"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "Do you store full posts in each follower's timeline or only ids? What does each choice cost on read and on edit/delete?",
+        "challenge": "Spell out {gap}. What are the fields and which access pattern is it optimised for?"
+      },
+      "SCALING": {
+        "concepts": [
+          {"label": "celebrity / hot-user problem", "aliases": ["celebrity", "hot user", "hybrid", "hot"], "dimension": "SCALABILITY"},
+          {"label": "cache eviction / inactive users", "aliases": ["inactive", "evict", "lru", "ttl"], "dimension": "SCALABILITY"},
+          {"label": "sharding posts & timelines", "aliases": ["shard", "partition"], "dimension": "SCALABILITY"},
+          {"label": "async fan-out workers / queues", "aliases": ["queue", "worker", "kafka", "async"], "dimension": "TRADE_OFF_REASONING"},
+          {"label": "consistency (deleted / edited posts)", "aliases": ["delete", "edit", "consisten", "stale"], "dimension": "TRADE_OFF_REASONING"}
+        ],
+        "followUp": "A post is deleted after it has been fanned out to 2M timelines. How does your system stop showing it, and how fast?",
+        "challenge": "Push on {gap}. At 10x the scale you assumed, what saturates and what's the fix?"
+      }
+    }
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "two-sum": {
+    "hints": [
+      "For each number, what other number would you need to see to hit the target? Can you check for it faster than scanning the whole array again?",
+      "Think about a data structure that answers 'have I seen value X before, and where?' in O(1). Build it up as you walk the array.",
+      "Approach outline: iterate once; for each element compute target - element; if that complement is already in a value->index map, you're done; otherwise record the current element and its index in the map. One pass, O(n) time, O(n) space."
+    ],
+    "followUp": "What happens if the same value appears twice and both copies are needed?"
+  },
+  "best-time-to-buy-and-sell-stock": {
+    "hints": [
+      "You must buy before you sell. As you scan left to right, what single piece of information about the past do you need to evaluate selling today?",
+      "Track the minimum price seen so far. At each day, the best profit selling today is today's price minus that minimum.",
+      "Approach outline: keep minSoFar and bestProfit; for each price update bestProfit = max(bestProfit, price - minSoFar) and then minSoFar = min(minSoFar, price). One pass, O(1) extra space."
+    ],
+    "followUp": "Why does updating the minimum *after* computing the profit matter?"
+  },
+  "contains-duplicate": {
+    "hints": [
+      "What is the simplest way to know whether you've encountered a value before?",
+      "A set gives O(1) membership checks. Alternatively, what property do duplicates have after sorting?",
+      "Approach outline: walk the array, adding each value to a hash set; if an add fails (value already present) you have found a duplicate. O(n) time, O(n) space. Sorting gives O(n log n) time with O(1) extra space instead."
+    ],
+    "followUp": "When would you choose the sort-based approach over the set?"
+  },
+  "maximum-subarray": {
+    "hints": [
+      "Consider the best subarray that *ends* at each index. How does it relate to the best subarray ending at the previous index?",
+      "If the best sum ending at i-1 is negative, extending it only hurts. So the best ending at i is either nums[i] alone or nums[i] plus the previous best.",
+      "Approach outline (Kadane): currentBest = max(nums[i], currentBest + nums[i]); overallBest = max(overallBest, currentBest). Single pass, O(1) space."
+    ],
+    "followUp": "How would you also recover the start and end indices of the winning subarray?"
+  },
+  "product-of-array-except-self": {
+    "hints": [
+      "Division is off the table. What two quantities, multiplied, give the product of everything except index i?",
+      "Product of everything to the left of i times product of everything to the right of i. Can you compute each of those for all i in one pass?",
+      "Approach outline: first pass fills result[i] with the prefix product of elements before i; second pass walks right-to-left carrying a running suffix product and multiplies it into result[i]. O(n) time, O(1) extra space beyond the output."
+    ],
+    "followUp": "What changes if the array contains zeros? Does the approach still hold?"
+  },
+  "three-sum": {
+    "hints": [
+      "Fixing one element reduces the problem to something you've already solved. What does it reduce to?",
+      "Sort the array first. For a fixed element, use two pointers moving toward each other on the remainder to find pairs that hit the negated target.",
+      "Approach outline: sort; for each index i (skipping duplicates), set lo = i+1, hi = n-1; while lo < hi compute the sum, move lo up if it's too small, hi down if too big, record and skip duplicates on a hit. O(n^2) time."
+    ],
+    "followUp": "Where exactly do duplicates sneak in, and how do you skip them without missing valid triplets?"
+  },
+  "trapping-rain-water": {
+    "hints": [
+      "Water above a bar depends on the tallest bars to its left and right. Which of those two limits actually matters?",
+      "The water level at i is min(maxLeft, maxRight) - height[i]. You could precompute both max arrays, but can you avoid the extra space?",
+      "Approach outline (two pointers): keep leftMax and rightMax; move the pointer on the side with the smaller max, since that side's water is already bounded. Accumulate max - height at each step. O(n) time, O(1) space."
+    ],
+    "followUp": "Why is it safe to move the pointer on the side with the smaller max without knowing the other side fully?"
+  },
+  "sliding-window-maximum": {
+    "hints": [
+      "Recomputing the max for every window is O(nk). What information from the previous window can be reused?",
+      "Once a larger element enters the window, smaller elements to its left can never be the max again. Which structure lets you discard them from the back and expire old ones from the front?",
+      "Approach outline (monotonic deque of indices): for each i, pop from the back while nums[back] <= nums[i], push i, pop from the front if it fell out of the window, and once i >= k-1 record nums[front]. O(n) time."
+    ],
+    "followUp": "Why store indices in the deque rather than values?"
+  },
+  "reverse-linked-list": {
+    "hints": [
+      "Reversing means every node's next should point to what used to be before it. What do you need to remember before you overwrite a next pointer?",
+      "Walk with three references: previous, current, next. Save next, redirect current.next to previous, then shift all three forward.",
+      "Approach outline: prev = null, cur = head; loop: nxt = cur.next; cur.next = prev; prev = cur; cur = nxt. Return prev. O(n) time, O(1) space. A recursive version also exists — think about what the call for node.next should return."
+    ],
+    "followUp": "Can you write the recursive version and explain its stack usage?"
+  },
+  "merge-two-sorted-lists": {
+    "hints": [
+      "Both lists are already sorted. At each step, which node must come next in the merged list?",
+      "A dummy head node removes the special case for the first element. Keep a tail pointer and attach the smaller head each iteration.",
+      "Approach outline: dummy -> tail; while both lists non-empty attach the smaller head and advance that list; finally attach whichever list remains. O(n+m) time, O(1) extra space."
+    ],
+    "followUp": "Why can you attach the entire remaining list at the end instead of continuing node by node?"
+  },
+  "linked-list-cycle": {
+    "hints": [
+      "If you could remember every node you've visited you'd spot a repeat. Can you detect a loop without extra memory?",
+      "Two runners on a circular track at different speeds will eventually meet. Try one pointer moving one step and another moving two.",
+      "Approach outline (Floyd): slow = fast = head; while fast and fast.next exist: slow = slow.next, fast = fast.next.next; if slow == fast there's a cycle. Reaching null means no cycle. O(n) time, O(1) space."
+    ],
+    "followUp": "How would you extend this to find the node where the cycle begins?"
+  },
+  "remove-nth-node-from-end": {
+    "hints": [
+      "You don't know the length up front. Two passes solve it — can you do it in one?",
+      "Send a lead pointer n steps ahead, then move lead and a trailing pointer together until lead runs off the end. Where is the trailing pointer?",
+      "Approach outline: use a dummy head; advance fast n+1 steps; move slow and fast together until fast is null; slow.next is the node to remove, so splice it out with slow.next = slow.next.next."
+    ],
+    "followUp": "Why does the dummy node make removing the head a non-special case?"
+  },
+  "reorder-list": {
+    "hints": [
+      "The target order interleaves the first half with the reversed second half. Can you break the problem into pieces you've solved before?",
+      "Find the middle (slow/fast pointers), reverse the second half, then merge the two halves alternately.",
+      "Approach outline: (1) slow/fast to find mid; (2) reverse the list after mid; (3) walk both halves, splicing nodes alternately. O(n) time, O(1) space."
+    ],
+    "followUp": "For odd lengths, which half should hold the extra node, and why?"
+  },
+  "copy-list-with-random-pointer": {
+    "hints": [
+      "The random pointer may point to a node you haven't copied yet. How can you look up a copy given an original node?",
+      "A map from original -> copy solves it in two passes. There is also a trick that interleaves copies into the original list to avoid the map.",
+      "Approach outline (O(1) space): for each node insert its copy right after it; then set copy.random = node.random.next; finally unweave the two lists. Alternatively use a hash map for O(n) space and simpler code."
+    ],
+    "followUp": "What breaks in the interleaving approach if you forget to restore the original list?"
+  },
+  "merge-k-sorted-lists": {
+    "hints": [
+      "You already know how to merge two sorted lists. What's the naive way to extend that to k, and what does it cost?",
+      "Either merge pairwise like merge sort (divide and conquer), or keep the current head of each list in a structure that always hands you the smallest.",
+      "Approach outline (heap): push each list's head into a min-heap keyed by value; repeatedly pop the smallest, append it, and push its next node. O(N log k) time where N is total nodes. Divide-and-conquer pairwise merging achieves the same bound."
+    ],
+    "followUp": "Compare the memory profile of the heap approach and the divide-and-conquer approach."
+  }
+}
