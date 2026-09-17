@@ -3,7 +3,7 @@
 Two modules: a **DSA Socratic Coach** (graduated hints, never full answers) and a
 **System Design Mock Interview Simulator** (staged Q&A, rubric-graded). See `SPEC.md`.
 
-## Backend (Java 21, Spring Boot 3.5, Postgres)
+## Backend (Java 25, Spring Boot 3.5, Postgres)
 
 ```bash
 docker compose up -d postgres          # local Postgres on :5432

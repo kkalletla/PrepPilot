@@ -18,8 +18,8 @@
   <description>AI Interview Coach backend: DSA Socratic Coach + System Design Mock Interview</description>
 
   <properties>
-    <java.version>21</java.version>
-    <maven.compiler.release>21</maven.compiler.release>
+    <java.version>25</java.version>
+    <maven.compiler.release>25</maven.compiler.release>
     <jjwt.version>0.12.6</jjwt.version>
   </properties>
 
