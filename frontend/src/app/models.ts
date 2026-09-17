@@ -11,7 +11,7 @@ export interface TokenResponse { token: string; userId: number; email: string; }
 
 export interface ProblemSummary {
   id: number; slug: string; title: string; category: ProblemCategory; difficulty: DifficultyTier;
-  status: ProgressStatus | null; hintsUsed: number;
+  status: ProgressStatus | null; hintsUsed: number; locked: boolean;
 }
 export interface ProgressView {
   problemId: number; difficulty: DifficultyTier; attempts: number; hintsUsed: number;
@@ -19,17 +19,17 @@ export interface ProgressView {
 }
 export interface ProblemDetail {
   id: number; slug: string; title: string; category: ProblemCategory; difficulty: DifficultyTier;
-  statement: string; progress: ProgressView | null;
+  statement: string; progress: ProgressView | null; locked: boolean;
 }
 export interface HintResponse { hint: string; depth: number; maxDepth: number; exhausted: boolean; followUpPrompt: string | null; }
 export interface HintView { hint: HintResponse; progress: ProgressView; }
 export interface SolveResult { progress: ProgressView; recommendedTier: DifficultyTier; escalated: boolean; streakDays: number; }
 export interface DashboardView {
   streakDays: number; solvedCount: number; inProgressCount: number;
-  recommendedTiers: Record<ProblemCategory, DifficultyTier>; recent: ProgressView[];
+  recommendedTiers: Record<ProblemCategory, DifficultyTier>; recent: ProgressView[]; historyDays: number | null;
 }
 
-export interface QuestionSummary { id: number; slug: string; title: string; category: string; seniority: SeniorityLevel; }
+export interface QuestionSummary { id: number; slug: string; title: string; category: string; seniority: SeniorityLevel; locked: boolean; }
 export interface TranscriptTurn { role: 'COACH' | 'CANDIDATE'; stage: DesignStage; content: string; }
 export interface RubricScore { dimensions: Record<RubricDimension, number>; overall: number; narrative: string; }
 export interface DesignFeedback {

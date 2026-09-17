@@ -1,8 +1,8 @@
 # PrepPilot — Build Status
 
-Last updated: 2026-09-17 (evening) · Branch `main` · 13 commits · Backend 61 tests passing · Frontend 5 specs passing
+Last updated: 2026-09-17 (late) · Branch `main` · 15 commits · Backend 65 tests passing · Frontend 8 specs passing
 
-Overall: **~82% of the Sept 17–19 plan complete**. All engineering scope for Sept 17 and Sept 18 is done;
+Overall: **~85% of the Sept 17–19 plan complete**. All engineering scope for Sept 17 and Sept 18 is done;
 what remains is the Sept 19 verification work that needs a running Postgres, real Stripe test keys and KayKay's review.
 
 ## Summary by phase
@@ -10,7 +10,7 @@ what remains is the Sept 19 verification work that needs a running Postgres, rea
 | Phase | Status | Complete |
 |---|---|---|
 | Sept 17 — foundation + both modules' backend + basic UI | Done | 100% |
-| Sept 18 — Stripe, usage gating, UI polish, CI | Mostly done (polish pass light) | 90% |
+| Sept 18 — Stripe, usage gating, UI polish, CI | Done (CI not yet executed on GitHub) | 97% |
 | Sept 19 — end-to-end local run, review, acceptance criteria | Local E2E done; Stripe charge + review pending | 35% |
 | Later — deployment | Deferred by design | 0% |
 
@@ -38,7 +38,7 @@ what remains is the Sept 19 verification work that needs a running Postgres, rea
 | 18 | Usage-gating middleware (free: 3 DSA/day, 1 design/week; paid+active unlimited; 402 on limit) | Backend | Done | 100% | `UsageGateTest`; HTTP 402 asserted in `BillingControllerTest`. |
 | 19 | Live-charge safety: refuse live key, ignore `livemode` events unless explicitly allowed | Backend | Done | 100% | Tested. Part of the "nothing can misfire into a live charge" criterion. |
 | 20 | Account/Billing screen (plan, usage vs limits, upgrade/portal) + 402 upgrade prompts | Frontend | Done | 100% | `BillingComponent` + spec; prompts on DSA problem and design list pages. |
-| 21 | UI polish pass | Frontend | Partial | 40% | Consistent theme (light/dark), responsive layout, empty states. No loading skeletons, toasts, or form-level validation messages yet. |
+| 21 | UI polish pass | Frontend | Done | 100% | Loading states on every page, toast notifications, inline form validation, tier/level colour pills, lock badges, stage scores on the interview tracker, sticky nav, focus states, dark mode, mobile table scroll. |
 | 22 | CI pipeline (backend tests, frontend tests + build, secrets grep) | DevOps | Done (not yet run) | 90% | `.github/workflows/ci.yml`. **Repo has no remote yet, so it has never executed on GitHub.** |
 | 23 | Run everything end-to-end locally (`docker compose up`, backend, frontend) | Verification | Done | 100% | 2026-09-17: Postgres 16 in Docker, 3 Flyway migrations applied, backend + Angular dev server up; 18/19 scripted journey checks passed via the `:4200` proxy (register → hints → solve → 402 gate → 4-stage design session → rubric 85/100). The one miss was the webhook signature check, which answers 503 by design when no webhook secret is configured. UI verified served/compiled, not yet clicked through in a browser. |
 | 24 | Stripe test-mode charge verified end-to-end (Checkout → webhook → tier upgrade → gating lifted) | Verification | Pending | 0% | Needs `STRIPE_SECRET_KEY`, `STRIPE_PRICE_ID`, `STRIPE_WEBHOOK_SECRET` and `stripe listen`. |
@@ -46,6 +46,8 @@ what remains is the Sept 19 verification work that needs a running Postgres, rea
 | 26 | Acceptance checklist sign-off (CI green, security check, engine swap proven) | Review | Partial | 50% | Engine swap ✔, no-secrets grep ✔ (local), auth guards ✔ (tests). CI-green and manual review outstanding. |
 | 27 | Hosting (Railway/Render), managed Postgres, deploy step, live Stripe keys | Deployment | Deferred | 0% | Explicitly out of scope until after review. |
 | 28 | `ClaudeCoachingEngine` / `OpenAiCoachingEngine` live-model implementations | Future | Not started | 0% | Only the seam exists; add a `@ConditionalOnProperty` bean per provider. |
+| 29 | Paid-only content: HARD/FAANG_BAR problems, STAFF design questions locked for free users | Backend + UI | Done | 100% | `PaidFeaturesTest`; `locked` flag in list DTOs; UI shows 🔒 Pro badges and an Unlock link. Configurable via `FREE_MAX_TIER`, `FREE_MAX_SENIORITY`. |
+| 30 | Paid-only full history; free users see a rolling 7-day window | Backend + UI | Done | 100% | Dashboard `recent` and design session list are windowed; counts stay accurate. `FREE_HISTORY_DAYS`. |
 
 ## Completed — what exists and how to check it
 
@@ -62,7 +64,6 @@ what remains is the Sept 19 verification work that needs a running Postgres, rea
 | 23 Browser click-through | Servers already run cleanly; open http://localhost:4200, register, try both modules and the billing page | KayKay | ~20 min |
 | 24 Stripe test charge | Stripe test keys exported; a recurring test price; `stripe listen --forward-to localhost:8080/api/billing/webhook`; pay with card 4242 4242 4242 4242 | KayKay for keys, agent can drive | ~1 h |
 | 22 CI actually green | `git remote add` + push to GitHub; fix anything environment-specific (Chrome headless on Ubuntu, Maven download time) | KayKay to create/push repo | ~30 min |
-| 21 UI polish | Loading states, toasts, nicer scorecard, keyboard focus states | Agent | ~2–3 h |
 | 25/26 Review + sign-off | Manual pass against SPEC "Acceptance Criteria"; anything unstable → backlog | KayKay | ~1 h |
 | 27 Deployment | Hosting account + managed Postgres; then Dockerfile, deploy job, live keys (last) | Later | — |
 

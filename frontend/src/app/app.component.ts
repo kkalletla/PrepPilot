@@ -1,28 +1,30 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from './core/auth.service';
+import { ToastComponent } from './shared/toast.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, ToastComponent],
   template: `
     <header class="topbar">
-      <a routerLink="/" class="brand">PrepPilot</a>
+      <a routerLink="/" class="brand"><span class="logo">▲</span> PrepPilot</a>
       @if (auth.isLoggedIn()) {
-        <nav>
+        <nav aria-label="Main">
           <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Dashboard</a>
           <a routerLink="/dsa" routerLinkActive="active">DSA Coach</a>
           <a routerLink="/design" routerLinkActive="active">System Design</a>
           <a routerLink="/billing" routerLinkActive="active">Account</a>
         </nav>
         <span class="spacer"></span>
-        <span class="muted">{{ auth.email() }}</span>
+        <span class="muted user">{{ auth.email() }}</span>
         <button class="link" (click)="logout()">Log out</button>
       }
     </header>
     <main class="container">
       <router-outlet />
     </main>
+    <app-toasts />
   `,
 })
 export class AppComponent {
