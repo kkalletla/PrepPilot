@@ -13,3 +13,15 @@ mvn test                               # runs against in-memory H2 (PostgreSQL m
 
 Environment variables (all have local defaults): `DATABASE_URL`, `DATABASE_USER`,
 `DATABASE_PASSWORD`, `JWT_SECRET`, `COACHING_ENGINE` (`template` | `claude` | `openai`).
+
+## Frontend (Angular 19)
+
+```bash
+cd frontend && npm install
+npm start                              # dev server on :4200, proxies /api to :8080
+npm test -- --watch=false --browsers=ChromeHeadless
+```
+
+Screens: login/register, dashboard (streak, tier progress, quick-resume), DSA practice
+(statement, notes area, graduated hint panel, difficulty filter), and the staged system-design
+session with a rubric scorecard at the end. Billing screen lands with Stripe on Sept 18.
