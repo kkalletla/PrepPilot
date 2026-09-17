@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: preppilot
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/preppilot}
+    username: ${DATABASE_USER:preppilot}
+    password: ${DATABASE_PASSWORD:preppilot}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+
+server:
+  port: ${PORT:8080}
+
+preppilot:
+  jwt:
+    # Must be at least 32 bytes. Override via JWT_SECRET in every real environment.
+    secret: ${JWT_SECRET:change-me-change-me-change-me-change-me-32b}
+    expiry-minutes: ${JWT_EXPIRY_MINUTES:1440}
+
+coaching:
+  # Selects the CoachingEngine bean: template | claude | openai
+  engine: ${COACHING_ENGINE:template}

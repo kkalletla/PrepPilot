@@ -1,0 +1,19 @@
+# Build
+backend/target/
+*.class
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Local env / secrets
+.env
+*.local.yml
+settings.json
+
+# Frontend (added tomorrow)
+frontend/node_modules/
+frontend/dist/
